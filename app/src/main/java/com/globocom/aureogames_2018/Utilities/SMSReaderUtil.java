@@ -13,7 +13,7 @@ public class SMSReaderUtil {
         String response = "";
         try {
             String message = "OTP PIN" +getRandomInteger(0, 4);
-            String smsurl = Constants.SMS_URL.replace("@msisdn",mobile).replace("@message", message);
+            String smsurl = ConstantsValues.SMS_URL.replace("@msisdn",mobile).replace("@message", message);
             URL url = new URL(smsurl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");

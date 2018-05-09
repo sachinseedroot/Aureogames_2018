@@ -140,7 +140,7 @@ public class ValidationUtils {
     private static String getOprator(String msisdn){
         String response="";
         HttpURLConnection urlConnection = null;
-        String requestUrl= Constants.GET_OPERATOR.replace("@msisdn",msisdn);
+        String requestUrl= ConstantsValues.GET_OPERATOR.replace("@msisdn",msisdn);
         try {
             URL url = new URL(requestUrl);
             urlConnection = (HttpURLConnection) url.openConnection();

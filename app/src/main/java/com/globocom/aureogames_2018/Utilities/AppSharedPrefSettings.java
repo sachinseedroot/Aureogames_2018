@@ -17,4 +17,16 @@ public class AppSharedPrefSettings {
         return prefs.getString("userMSISDN", "");
     }
 
+
+    public static void setIsUserVerified(Context context, boolean IsUserVerified) {
+        SharedPreferences prefs = Prefs.get(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("IsUserVerified", IsUserVerified);
+        editor.commit();
+    }
+
+    public static boolean getIsUserVerified(Context context) {
+        SharedPreferences prefs = Prefs.get(context);
+        return prefs.getBoolean("IsUserVerified", false);
+    }
 }

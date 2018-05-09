@@ -1,6 +1,6 @@
 package com.globocom.aureogames_2018.Utilities;
 
-public class Constants {
+public class ConstantsValues {
 
     public static final String getHEUrl ="http://wap.globocom.co.in/du_header.jsp";
 

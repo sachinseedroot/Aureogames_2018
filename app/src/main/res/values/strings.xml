@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">Aureogames_2018</string>
+    <string name="app_name">Aureogames 2018</string>
+
+    <string name="fullversionnoavailable">Sorry, this game is not available in your country.</string>
 </resources>

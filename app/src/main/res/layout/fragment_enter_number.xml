@@ -9,8 +9,33 @@
 
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="HELLO"
+        android:gravity="center"
+        android:layout_height="wrap_content"
+        android:text="PAGE ONE - Enter number"
+        android:layout_alignParentTop="true"
        android:id="@+id/statusTV" />
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/phonenoTV"
+        android:layout_centerInParent="true"
+        android:id="@+id/countryCodeTV"/>
+
+    <EditText
+        android:layout_marginLeft="20dp"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/phonenoTV"
+        android:layout_centerInParent="true"
+        />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/phonenoTV"
+        android:id="@+id/submitBTN"
+        android:text="Submit"/>
 
 </RelativeLayout>
