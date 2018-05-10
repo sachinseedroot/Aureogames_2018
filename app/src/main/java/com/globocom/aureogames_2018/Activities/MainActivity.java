@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -28,12 +29,20 @@ import com.globocom.aureogames_2018.Controller.MainApplication;
 import com.globocom.aureogames_2018.Fragments.EnterNumberFragment;
 import com.globocom.aureogames_2018.Fragments.GamePageFragment;
 import com.globocom.aureogames_2018.Fragments.VerifyOtpFragment;
+import com.globocom.aureogames_2018.Model.UserDetailsModel;
 import com.globocom.aureogames_2018.R;
+import com.globocom.aureogames_2018.Utilities.AppSharedPrefSettings;
+import com.globocom.aureogames_2018.Utilities.AppUtilities;
+import com.globocom.aureogames_2018.Utilities.ConstantsKPI;
+import com.globocom.aureogames_2018.Utilities.ConstantsValues;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Stack;
+
+import static com.globocom.aureogames_2018.Utilities.AppUtilities.getIPAddress;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -41,14 +50,17 @@ public class MainActivity extends AppCompatActivity {
     private Context mcontext;
     public static final int PERMISSION_ALL = 99;
     private Button permissionTV;
-    private String mobileNo;
-    private String countryCode;
-    private String carrierName;
+    private String countryCode = "";
+    private String mobileNoFromSim = "";
     private Stack<Fragment> fragmentStack;
     private EnterNumberFragment enterNumberFragment;
     private VerifyOtpFragment verifyOtpFragment;
     private GamePageFragment gamePageFragment;
     private boolean doubleBackToExitPressedOnce = false;
+    private String carrierName = "";
+    private boolean isCountryCodeValid = false;
+    private String androidId;
+    private String operator = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
                 getPermissionStatusAndWifiStatus();
             }
         });
+
+
     }
 
     public void getPermissionStatusAndWifiStatus() {
@@ -123,20 +137,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loadScreenOne() {
-
-
         if (enterNumberFragment == null)
-            enterNumberFragment = new EnterNumberFragment();
+            enterNumberFragment = EnterNumberFragment.newInstance(countryCode, carrierName, mobileNoFromSim);
 
         if (enterNumberFragment.isAdded()) {
             return;
         }
 
         fragmentStack.clear();
-
-
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.setCustomAnimations(R.anim.slideinright, R.anim.slideoutleft);
+        ft.setCustomAnimations(R.anim.enter_from_right, R.anim.hold);
         ft.add(frameLayoutContainer.getId(), enterNumberFragment);
         if (fragmentStack.size() > 0) {
             fragmentStack.lastElement().onPause();
@@ -144,22 +154,16 @@ public class MainActivity extends AppCompatActivity {
         }
         fragmentStack.push(enterNumberFragment);
         ft.commitAllowingStateLoss();
-
-
     }
 
 
-    public void loadScreenTwo() {
+    public void loadScreenTwo(String msisdn,String op) {
         if (verifyOtpFragment == null)
-            verifyOtpFragment = new VerifyOtpFragment();
-
-        if (verifyOtpFragment.isAdded()) {
-            return;
-        }
+            verifyOtpFragment = VerifyOtpFragment.newInstance(msisdn,op);
 
 
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.setCustomAnimations(R.anim.slideinright, R.anim.slideoutleft);
+        ft.setCustomAnimations(R.anim.enter_from_right, R.anim.hold);
         ft.add(frameLayoutContainer.getId(), verifyOtpFragment);
         if (fragmentStack.size() > 0) {
             fragmentStack.lastElement().onPause();
@@ -173,13 +177,9 @@ public class MainActivity extends AppCompatActivity {
         if (gamePageFragment == null)
             gamePageFragment = new GamePageFragment();
 
-        if (gamePageFragment.isAdded()) {
-            return;
-        }
-
-
+        fragmentStack.clear();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.setCustomAnimations(R.anim.slideinright, R.anim.slideoutleft);
+        ft.setCustomAnimations(R.anim.enter_from_right, R.anim.hold);
         ft.add(frameLayoutContainer.getId(), gamePageFragment);
         if (fragmentStack.size() > 0) {
             fragmentStack.lastElement().onPause();
@@ -196,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
 
         } else if (pagenumber == 2) {
 
-            loadScreenTwo();
+//            loadScreenTwo();
 
         } else if (pagenumber == 3) {
 
@@ -211,21 +211,46 @@ public class MainActivity extends AppCompatActivity {
 
     public void verifyUser() {
         countryCode = getCountryBasedOnSimCardOrNetwork(mcontext);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             List<SubscriptionInfo> subscription = SubscriptionManager.from(getApplicationContext()).getActiveSubscriptionInfoList();
             for (int i = 0; i < subscription.size(); i++) {
                 SubscriptionInfo info = subscription.get(i);
                 System.out.println("-code-number--- " + info.getNumber());
                 System.out.println("-code-network-name-- " + info.getCarrierName());
+
                 if (!TextUtils.isEmpty(info.getCountryIso())) {
-                    countryCode = info.getCountryIso();
+                    if (!TextUtils.isEmpty(countryCode)) {
+                        countryCode = countryCode + "," + info.getCountryIso();
+                    } else {
+                        countryCode = info.getCountryIso();
+                    }
+                    if (info.getCountryIso().equalsIgnoreCase(Constants.COUNTRY_CODE)) {
+                        isCountryCodeValid = true;
+                    }
+                }
+
+                if (!TextUtils.isEmpty(info.getCarrierName())) {
+                    if (!TextUtils.isEmpty(carrierName)) {
+                        carrierName = carrierName + "," + info.getCarrierName();
+                    } else {
+                        carrierName = info.getCarrierName() + "";
+                    }
+                }
+
+                if (!TextUtils.isEmpty(info.getNumber())) {
+                    if (!TextUtils.isEmpty(mobileNoFromSim)) {
+                        mobileNoFromSim = mobileNoFromSim + "," + info.getNumber();
+                    } else {
+                        mobileNoFromSim = info.getNumber();
+                    }
                 }
             }
         }
 
         System.out.println("-validation--countrycode--- " + countryCode);
 
-        if (!Constants.COUNTRY_CODE.equalsIgnoreCase(countryCode)) {
+        if (!isCountryCodeValid) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(mcontext.getResources().getString(R.string.fullversionnoavailable))
                     .setCancelable(false)
@@ -240,8 +265,21 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog alert = builder.create();
             alert.setTitle("Information");
             alert.show();
+
+            String url= ConstantsValues.OPEN_APP_KPI.replace("@msisdn", "").replace("@googleId", AppSharedPrefSettings.getANDROID_ID(mcontext)) + "&ip=" + getIPAddress(true) + "&operatorId=" + operator + "&version=" + android.os.Build.VERSION.SDK_INT;;
+            AppUtilities.sendInternalAnalytics(mcontext,url,"99");
         } else {
-            loadPage(1);
+
+            UserDetailsModel userDetailsModel = AppUtilities.getUserModelData(mcontext);
+            if (userDetailsModel != null && !TextUtils.isEmpty(userDetailsModel.userKPI)
+                    && (ConstantsKPI.PIN_VERIFY_KPI.equalsIgnoreCase(userDetailsModel.userKPI) ||
+                    ConstantsKPI.PRODUCT_PAGE_KPI.equalsIgnoreCase(userDetailsModel.userKPI))) {
+                loadPage(3);
+
+            } else {
+                loadPage(1);
+            }
+
         }
     }
 
@@ -344,7 +382,7 @@ public class MainActivity extends AppCompatActivity {
                 Fragment fragment = fragmentStack.pop();
 
 
-                ft.setCustomAnimations(R.anim.slideinleft, R.anim.slideoutright);
+                ft.setCustomAnimations(R.anim.hold, R.anim.exit_to_right);
 
                 Fragment lastFragment = fragmentStack.lastElement();
 

@@ -29,4 +29,65 @@ public class AppSharedPrefSettings {
         SharedPreferences prefs = Prefs.get(context);
         return prefs.getBoolean("IsUserVerified", false);
     }
+
+    public static void setIsUserCountryCode(Context context, String IsUserCountryCode) {
+        SharedPreferences prefs = Prefs.get(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("IsUserCountryCode", IsUserCountryCode);
+        editor.commit();
+    }
+
+    public static String getIsUserCountryCode(Context context) {
+        SharedPreferences prefs = Prefs.get(context);
+        return prefs.getString("IsUserCountryCode", "");
+    }
+
+
+    public static void setuserDetailsJSON(Context context, String userDetailsJSON) {
+        SharedPreferences prefs = Prefs.get(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("userDetailsJSON", userDetailsJSON);
+        editor.commit();
+    }
+
+    public static String getuserDetailsJSON(Context context) {
+        SharedPreferences prefs = Prefs.get(context);
+        return prefs.getString("userDetailsJSON", "");
+    }
+
+    public static void setTrackingUuid(Context context, String TrackingUuid) {
+        SharedPreferences prefs = Prefs.get(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("TrackingUuid", TrackingUuid);
+        editor.commit();
+    }
+
+    public static String getTrackingUuid(Context context) {
+        SharedPreferences prefs = Prefs.get(context);
+        return prefs.getString("TrackingUuid", "");
+    }
+
+    public static void setANDROID_ID(Context context, String ANDROID_ID) {
+        SharedPreferences prefs = Prefs.get(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("ANDROID_ID", ANDROID_ID);
+        editor.commit();
+    }
+
+    public static String getANDROID_ID(Context context) {
+        SharedPreferences prefs = Prefs.get(context);
+        return prefs.getString("ANDROID_ID", "");
+    }
+
+    public static void setAppsflyerReferrer(Context context, String AppsflyerReferrer) {
+        SharedPreferences prefs = Prefs.get(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("AppsflyerReferrer", AppsflyerReferrer);
+        editor.commit();
+    }
+
+    public static String getAppsflyerReferrer(Context context) {
+        SharedPreferences prefs = Prefs.get(context);
+        return prefs.getString("AppsflyerReferrer", "");
+    }
 }

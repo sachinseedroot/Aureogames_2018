@@ -30,14 +30,15 @@ public class SplashActivity extends AppCompatActivity {
 
                     Intent i = new Intent(SplashActivity.this, MainActivity.class);
                     startActivity(i);
-                    overridePendingTransition(R.anim.slideinright, R.anim.slideoutleft);
+                    overridePendingTransition(R.anim.enter_from_right, R.anim.hold);
 
                     finish();
                 }
             }, SPLASH_TIME_OUT);
 
 
-            AppUtilities.sendAnalytics(this, "splashscreen", "launch", "view", "app_launched","");
+            AppUtilities.sendAnalytics(this, "splashscreen", "launch", "view", "app_launched","","",
+                    "","",0,0,"","","","");
 
         }else{
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
