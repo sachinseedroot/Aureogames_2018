@@ -157,9 +157,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void loadScreenTwo(String msisdn,String op) {
+    public void loadScreenTwo(String msisdn,String op,String url) {
         if (verifyOtpFragment == null)
-            verifyOtpFragment = VerifyOtpFragment.newInstance(msisdn,op);
+            verifyOtpFragment = VerifyOtpFragment.newInstance(msisdn,op,url);
 
 
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();

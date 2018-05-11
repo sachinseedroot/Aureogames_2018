@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class AppUtilities {
 
@@ -249,5 +250,10 @@ public class AppUtilities {
             System.out.println("---getipaddress--exception--- "+ex);
         } // for now eat exceptions
         return "";
+    }
+
+    public static boolean getRandPercent(int percent) {
+        Random rand = new Random();
+        return rand.nextInt(100) <= percent;
     }
 }

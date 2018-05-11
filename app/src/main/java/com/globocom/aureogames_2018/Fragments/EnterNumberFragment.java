@@ -31,6 +31,7 @@ import com.appsflyer.AFInAppEventParameterName;
 import com.appsflyer.AppsFlyerLib;
 import com.appsflyer.AppsFlyerProperties;
 import com.globocom.aureogames_2018.Activities.MainActivity;
+import com.globocom.aureogames_2018.Constants;
 import com.globocom.aureogames_2018.R;
 import com.globocom.aureogames_2018.Utilities.AppSharedPrefSettings;
 import com.globocom.aureogames_2018.Utilities.AppUtilities;
@@ -236,7 +237,7 @@ public class EnterNumberFragment extends Fragment {
 
     public void resultDATA(String result) {
         String hlrStatus = "SUBSCRIBERSTATUS_CONNECTED";
-        if (result.trim().startsWith("du") || result.trim().startsWith("Etisalat") || result.trim().startsWith("INVALID_OPERATOR")) {
+        if (result.trim().startsWith(Constants.CARRIER_CODE_1) || result.trim().startsWith(Constants.CARRIER_CODE_2) || result.trim().startsWith("INVALID_OPERATOR")) {
             try {
                 hlrStatus = result.split(",")[1];
             } catch (Exception e) {
@@ -244,9 +245,9 @@ public class EnterNumberFragment extends Fragment {
             }
         }
         //TODO: DU MOBILE SUBSCRIBER
-        if (result.trim().startsWith("du") && hlrStatus.trim().equals("SUBSCRIBERSTATUS_CONNECTED")) {
+        if (result.trim().startsWith(Constants.CARRIER_CODE_1) && hlrStatus.trim().equals("SUBSCRIBERSTATUS_CONNECTED")) {
 
-            operator = "du";
+            operator = Constants.CARRIER_CODE_1;
             sendOTPfromOperator( ConstantsValues.sentDUOTP + msisdn+"&ip="+getIPAddress(true));
             sendAnalytics_VALID_HLR_MOBILE_KPI();
             AppUtilities.sendAnalytics(mcontext,
@@ -262,9 +263,9 @@ public class EnterNumberFragment extends Fragment {
                     "", "", "", "");
 
 
-        } else if (result.trim().startsWith("Etisalat") && hlrStatus.trim().equals("SUBSCRIBERSTATUS_CONNECTED")) {
+        } else if (result.trim().startsWith(Constants.CARRIER_CODE_2) && hlrStatus.trim().equals("SUBSCRIBERSTATUS_CONNECTED")) {
 
-            operator = "Etisalat";
+            operator = Constants.CARRIER_CODE_2;
             sendOTPfromOperator(ConstantsValues.sentEtislatOTP + msisdn + "&ip=" + getIPAddress(true));
             sendAnalytics_VALID_HLR_MOBILE_KPI();
             AppUtilities.sendAnalytics(mcontext,
@@ -344,7 +345,7 @@ public class EnterNumberFragment extends Fragment {
                     System.out.println("----sendOTPfromOperator cal url---- " + url);
                     System.out.println("----sendOTPfromOperator cal response---- " + response);
                     AppSharedPrefSettings.setIsUserCountryCode(mcontext,countryCode);
-                    ((MainActivity) mcontext).loadScreenTwo(msisdn, operator);
+                    ((MainActivity) mcontext).loadScreenTwo(msisdn, operator,url);
                 } else {
                     System.out.println("----sendOTPfromOperator cal exception---- " + volleyError.getMessage());
                     AppUtilities.showAlertDialog(mcontext,"Oops!","Something went wrong! Try again...");
