@@ -121,6 +121,7 @@ public class VerifyOtpFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 btn_submit.setEnabled(false);
+
                 sendOTP_on_click();
             }
         });
@@ -158,7 +159,7 @@ public class VerifyOtpFragment extends Fragment {
             public void onTick(long millisUntilFinished) {
 
                 resendOTP.setText("Waiting for OTP..." + " 00:" + millisUntilFinished / 1000 + "s");
-                //here you can have your logic to set text to edittext
+
             }
 
             public void onFinish() {
@@ -229,7 +230,11 @@ public class VerifyOtpFragment extends Fragment {
                 AppUtilities.showAlertDialog(mcontext, "Invalid Pin", "Please enter a 4-digit pin.");
             } else {
                 //TODO: PIN_READ_KPI
-
+                View views = getActivity().getCurrentFocus();
+                if (views != null) {
+                    InputMethodManager imm = (InputMethodManager) mcontext.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(views.getWindowToken(), 0);
+                }
 
                 String url = ConstantsValues.PIN_READ_KPI.replace("@msisdn", msisdn).replace("@msg", msg) + "&ip=" + getIPAddress(true);
                 AppUtilities.sendAnalytics(mcontext,

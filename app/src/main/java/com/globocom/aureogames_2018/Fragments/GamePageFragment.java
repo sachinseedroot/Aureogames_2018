@@ -68,7 +68,7 @@ public class GamePageFragment extends Fragment {
 
 
         webView = (WebView) view.findViewById(R.id.webView);
-        webView.loadUrl("http://www.google.com");
+        webView.loadUrl(url);
         WebSettings webSettings = webView.getSettings();
         webSettings.setAppCacheEnabled(true);
         webSettings.setBuiltInZoomControls(true);

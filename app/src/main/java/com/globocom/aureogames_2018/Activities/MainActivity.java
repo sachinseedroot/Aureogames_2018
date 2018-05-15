@@ -203,6 +203,18 @@ public class MainActivity extends AppCompatActivity {
         }
         fragmentStack.push(gamePageFragment);
         ft.commitAllowingStateLoss();
+
+        try {
+           new Handler().postDelayed(new Runnable() {
+               @Override
+               public void run() {
+                   loadTitle(false);
+               }
+           },500);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void loadPage(int pagenumber) {

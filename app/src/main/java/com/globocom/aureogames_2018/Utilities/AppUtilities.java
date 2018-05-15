@@ -17,6 +17,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.appsflyer.AFInAppEventParameterName;
 import com.appsflyer.AppsFlyerLib;
+import com.facebook.appevents.AppEventsConstants;
+import com.facebook.appevents.AppEventsLogger;
 import com.globocom.aureogames_2018.Controller.MainApplication;
 import com.globocom.aureogames_2018.Model.CountryCodeModel;
 import com.globocom.aureogames_2018.R;
@@ -117,6 +119,7 @@ public class AppUtilities {
 
     public static void sendInternalAnalytics(Context context, final String url, final String id) {
         if (!TextUtils.isEmpty(url)) {
+            System.out.println("-analytics-sent----- InternalAnalytics");
             StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                     new Response.Listener<String>() {
                         @Override
@@ -174,8 +177,10 @@ public class AppUtilities {
         protected Void doInBackground(Void... voids) {
 
             sendFirebaseAnalytics(context, screenName, category, action, kpi, id, name, msisdn);
-            sendAppsFlyer(context, screenName, category, action, kpi, msisdn, submitPin, pin_eventype, sms_received, pin_received, a_score, a_level);
+            sendAppsFlyer(context, screenName, category, action, kpi, msisdn, submitPin, pin_eventype,
+                    sms_received, pin_received, a_score, a_level);
             sendInternalAnalytics(context, url, kpi);
+            sendFacebook_AppLogger_Events(context, screenName, category, action, kpi, id, name, msisdn);
             return null;
         }
     }
@@ -184,9 +189,11 @@ public class AppUtilities {
     public static UserDetailsModel getUserModelData(Context context) {
         UserDetailsModel userDetailsModel = null;
         try {
-            JSONObject jsonObject = new JSONObject(AppSharedPrefSettings.getuserDetailsJSON(context));
-            if (jsonObject != null) {
-                userDetailsModel = new UserDetailsModel(jsonObject);
+            if(!TextUtils.isEmpty(AppSharedPrefSettings.getuserDetailsJSON(context))) {
+                JSONObject jsonObject = new JSONObject(AppSharedPrefSettings.getuserDetailsJSON(context));
+                if (jsonObject != null) {
+                    userDetailsModel = new UserDetailsModel(jsonObject);
+                }
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -279,6 +286,7 @@ public class AppUtilities {
         return countryCodeModel;
 
     }
+
     public static ArrayList<CountryCodeModel> getCountryCodeModelArrayByName() {
         ArrayList<CountryCodeModel> countryCodeModels = new ArrayList<>();
         try {
@@ -773,6 +781,35 @@ public class AppUtilities {
                 return R.drawable.flag_zimbabwe;
             default:
                 return R.drawable.flag_transparent;
+        }
+    }
+
+    public static void sendFacebook_AppLogger_Events(Context context, String screenName, String category, String action,
+                                                     String kpi, String id, String name, String msisdn) {
+        try {
+            if (MainApplication.appEventsLogger == null) {
+                MainApplication.appEventsLogger = AppEventsLogger.newLogger(context);
+            }
+            Bundle bundle = new Bundle();
+            bundle.putString("screenName", screenName);
+            bundle.putString("category", category);
+            bundle.putString("action", action);
+            bundle.putString("kpi", kpi);
+            bundle.putString(AppEventsConstants.EVENT_PARAM_CONTENT_ID, id);
+            bundle.putString(AppEventsConstants.EVENT_PARAM_CONTENT_TYPE, name);
+            bundle.putString(AppEventsConstants.EVENT_PARAM_CONTENT, msisdn);
+            bundle.putString(AppEventsConstants.EVENT_NAME_VIEWED_CONTENT, kpi);
+
+            MainApplication.appEventsLogger.logEvent(
+                    kpi,
+                    1.0,
+                    bundle
+            );
+
+            System.out.println("-analytics-sent----- Facebook_AppLogger_Events");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("-facebookEventLogger-exception---- " + e);
         }
     }
 }

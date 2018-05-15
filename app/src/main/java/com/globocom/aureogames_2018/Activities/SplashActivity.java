@@ -15,7 +15,7 @@ import com.globocom.aureogames_2018.Utilities.AppUtilities;
 
 public class SplashActivity extends AppCompatActivity {
 
-    private static int SPLASH_TIME_OUT = 2000;
+    private static int SPLASH_TIME_OUT = 1500;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

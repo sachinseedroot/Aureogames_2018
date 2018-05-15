@@ -3,4 +3,5 @@
 
     <string name="fullversionnoavailable">Sorry, this game is not available in your country.</string>
     <string name="otp_details">A 4-digit Verification Code will be sent via SMS to verify your mobile number</string>
+
 </resources>

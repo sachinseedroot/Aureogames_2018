@@ -9,6 +9,8 @@ import com.appsflyer.AppsFlyerLib;
 import com.appsflyer.AppsFlyerProperties;
 import com.chartboost.sdk.Chartboost;
 import com.crashlytics.android.Crashlytics;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.globocom.aureogames_2018.Constants;
 import com.globocom.aureogames_2018.Utilities.AppConstants;
 import com.globocom.aureogames_2018.Utilities.AppSharedPrefSettings;
@@ -22,6 +24,7 @@ import io.fabric.sdk.android.Fabric;
 public class MainApplication extends Application {
 
     public static FirebaseAnalytics firebaseAnalytics;
+    public static AppEventsLogger appEventsLogger;
 
     @Override
     public void onCreate() {
@@ -72,6 +75,9 @@ public class MainApplication extends Application {
             String androidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
             AppSharedPrefSettings.setANDROID_ID(this, androidId);
 
+            FacebookSdk.sdkInitialize(this);
+            AppEventsLogger.activateApp(this,Constants.FACEBOOK_PIXEL_ID);
+            appEventsLogger = AppEventsLogger.newLogger(this);
 
             System.out.println("-tracking-uuid---- " + uuid);
             System.out.println("-tracking-androidId---- " + androidId);

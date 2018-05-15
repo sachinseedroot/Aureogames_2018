@@ -12,4 +12,6 @@ public class Constants {
 
     public static final String CHARTBOOST_appId="5aa7b00a4212270b96ac29a5";
     public static final String CHARTBOOST_appSignature="41b657e617af26263ff852acd79874006ffbf8a7";
+
+    public static final String FACEBOOK_PIXEL_ID = "1699407243512814";//618638638468541
 }

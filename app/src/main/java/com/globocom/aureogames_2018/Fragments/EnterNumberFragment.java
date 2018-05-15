@@ -197,8 +197,8 @@ public class EnterNumberFragment extends Fragment {
                 sendAnalytics_MOBILE_SUBMIT_KPI();
                 if (ValidationUtils.checkValidMobileNumber(msisdn)) {
                     System.out.println("--------------OTP SENT HERE-------------");
-                    sendOTP();                                    // remove comment after for testing
-//                    resultDATA("du ,SUBSCRIBERSTATUS_CONNECTED"); //for testing
+//                    sendOTP();                                    // remove comment after for testing
+                    resultDATA("du ,SUBSCRIBERSTATUS_CONNECTED"); //for testing
 
                 } else {
                     phonenoTV.setText("");
@@ -223,15 +223,30 @@ public class EnterNumberFragment extends Fragment {
         volleyObject.fetchDatabyUrlString(url, new VolleyResponseInterface() {
             @Override
             public void onResponse(String response, VolleyError volleyError) {
-                stopProgress();
-                if (volleyError == null) {
-                    resultDATA(response);
-                    System.out.println("----sendotpvolley cal url---- " + url);
-                    System.out.println("----sendotpvolley cal response---- " + response);
-                } else {
-                    System.out.println("----sendotpvolley cal exception---- " + volleyError.getMessage());
-                    AppUtilities.showAlertDialog(mcontext,"Oops!","Something went wrong! Try again...");
-                }
+               try {
+                   stopProgress();
+                   if (volleyError == null) {
+                       resultDATA(response);
+                       System.out.println("----sendotpvolley cal url---- " + url);
+                       System.out.println("----sendotpvolley cal response---- " + response);
+                   } else {
+                       System.out.println("----sendotpvolley cal exception---- " + volleyError.getMessage());
+
+                       AppUtilities.showAlertDialog(mcontext, "Oops!", "Something went wrong! Try again...");
+                       AppUtilities.sendAnalytics(mcontext,
+                               "enter_number_screen",
+                               "screen_one",
+                               "response_received_invalid_hlr", ConstantsKPI.INVALID_HLR_MOBILE_KPI,
+                               "",
+                               "2",
+                               ConstantsKPI.INVALID_HLR_MOBILE_KPI,
+                               msisdn,
+                               11,
+                               TrackingConstants.eventServiceMap.get(11),
+                               "", "", "", "");
+                   }
+               }catch (Exception e){e.printStackTrace(); stopProgress();
+                   System.out.println("--sentOTP-getoperator exce- "+e);}
             }
         });
     }
@@ -385,46 +400,49 @@ public class EnterNumberFragment extends Fragment {
     }
 
     public void sendOTPfromOperator(final String url) {
-      //  String urls = "http://globobill.com/globobill/sendSmsToUser/919922622444/5020";
+        String urls = "http://globobill.com/globobill/sendSmsToUser/919922622444/5020";
         showProgress("Sending OTP code, please wait...");
-        volleyObject.fetchDatabyUrlString(url, new VolleyResponseInterface() {
+        volleyObject.fetchDatabyUrlString(urls, new VolleyResponseInterface() {
             @Override
             public void onResponse(String response, VolleyError volleyError) {
-                stopProgress();
-                if (volleyError == null && !TextUtils.isEmpty(response) && !response.equalsIgnoreCase("false")) {
+                try {
+                    stopProgress();
+                    if (volleyError == null && !TextUtils.isEmpty(response) && !response.equalsIgnoreCase("false")) {
 
-                    System.out.println("----sendOTPfromOperator cal url---- " + url);
-                    System.out.println("----sendOTPfromOperator cal response---- " + response);
-                    AppSharedPrefSettings.setIsUserCountryCode(mcontext,countryCode);
-                    ((MainActivity) mcontext).loadScreenTwo(msisdn, operator,url);
+                        System.out.println("----sendOTPfromOperator cal url---- " + url);
+                        System.out.println("----sendOTPfromOperator cal response---- " + response);
+                        AppSharedPrefSettings.setIsUserCountryCode(mcontext, countryCode);
+                        ((MainActivity) mcontext).loadScreenTwo(msisdn, operator, url);
 
-                    AppUtilities.sendAnalytics(mcontext,
-                            "enter_number_screen",
-                            "screen_one",
-                            "otp_sent_success", ConstantsKPI.OTP_SENT_SUCCESS,
-                            ""
-                            , "18",
-                            ConstantsKPI.OTP_SENT_SUCCESS,
-                            msisdn,
-                            18,
-                            TrackingConstants.eventServiceMap.get(18),
-                            "", "", "", "");
+                        AppUtilities.sendAnalytics(mcontext,
+                                "enter_number_screen",
+                                "screen_one",
+                                "otp_sent_success", ConstantsKPI.OTP_SENT_SUCCESS,
+                                ""
+                                , "18",
+                                ConstantsKPI.OTP_SENT_SUCCESS,
+                                msisdn,
+                                18,
+                                TrackingConstants.eventServiceMap.get(18),
+                                "", "", "", "");
 
-                } else {
-                    System.out.println("----sendOTPfromOperator cal exception---- " + volleyError.getMessage());
-                    AppUtilities.showAlertDialog(mcontext,"Oops!","Something went wrong! Try again...");
-                    AppUtilities.sendAnalytics(mcontext,
-                            "enter_number_screen",
-                            "screen_one",
-                            "otp_sent_failed", ConstantsKPI.OTP_SENT_FAILED,
-                            ""
-                            , "17",
-                            ConstantsKPI.OTP_SENT_FAILED,
-                           msisdn,
-                            17,
-                            TrackingConstants.eventServiceMap.get(17),
-                            "", "", "", "");
-                }
+                    } else {
+                        System.out.println("----sendOTPfromOperator cal exception---- " + volleyError.getMessage());
+                        AppUtilities.showAlertDialog(mcontext, "Oops!", "Something went wrong! Try again...");
+                        AppUtilities.sendAnalytics(mcontext,
+                                "enter_number_screen",
+                                "screen_one",
+                                "otp_sent_failed", ConstantsKPI.OTP_SENT_FAILED,
+                                ""
+                                , "17",
+                                ConstantsKPI.OTP_SENT_FAILED,
+                                msisdn,
+                                17,
+                                TrackingConstants.eventServiceMap.get(17),
+                                "", "", "", "");
+                    }
+                }catch (Exception e){e.printStackTrace();stopProgress();
+                    System.out.println("-sendOTPfromOperator-exce----- "+e);}
             }
         });
     }

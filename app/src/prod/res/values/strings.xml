@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Aureo Games</string>
+    <string name="facebook_app_id">2137913883106843</string>
+    <string name="fb_login_protocol_scheme">fb2137913883106843</string>
 </resources>
