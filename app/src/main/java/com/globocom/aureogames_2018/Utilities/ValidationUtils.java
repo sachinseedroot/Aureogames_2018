@@ -40,6 +40,7 @@ public class ValidationUtils {
         //TODO: FOR INDIA TESTING
         else if(mobileNo.length()==12 && mobileNo.startsWith("91")){
             msisdn=mobileNo;
+            flag=true;
         } else{
             flag =false;
         }
@@ -47,6 +48,9 @@ public class ValidationUtils {
     }
 
     public static String validedMobileNumber(String mobileNo){
+        if(mobileNo.contains("+")){
+            mobileNo= mobileNo.replace("+","");
+        }
         String msisdn="";
         // TODO: start with 00 and length is 12
         if(mobileNo.startsWith("00") && mobileNo.length()>12){

@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,8 +21,12 @@ import android.widget.TextView;
 
 import com.globocom.aureogames_2018.Activities.MainActivity;
 import com.globocom.aureogames_2018.Constants;
+import com.globocom.aureogames_2018.Model.UserDetailsModel;
 import com.globocom.aureogames_2018.R;
+import com.globocom.aureogames_2018.Utilities.AppUtilities;
+import com.globocom.aureogames_2018.Utilities.ConstantsKPI;
 import com.globocom.aureogames_2018.Utilities.ConstantsValues;
+import com.globocom.aureogames_2018.Utilities.TrackingConstants;
 
 import java.util.HashMap;
 
@@ -30,7 +35,7 @@ public class GamePageFragment extends Fragment {
     private Context mcontext;
     private WebView webView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private String url= ConstantsValues.GAMEZINE_PAGE;
+    private String url = ConstantsValues.GAMEZINE_PAGE;
     private HashMap<String, String> noCacheHeaders;
 
     @Override
@@ -42,15 +47,15 @@ public class GamePageFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_game_page,container,false);
-        return view ;
+        View view = inflater.inflate(R.layout.fragment_game_page, container, false);
+        return view;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        TextView textView  =(TextView) view.findViewById(R.id.statusTV);
+        TextView textView = (TextView) view.findViewById(R.id.statusTV);
         textView.setText(Constants.ApplicationID);
 
 
@@ -101,12 +106,11 @@ public class GamePageFragment extends Fragment {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
 
-                if(view.getTitle() != null && view.getTitle().length() > 0){
-                    System.out.println("-----page--title------- "+view.getTitle());
+                if (view.getTitle() != null && view.getTitle().length() > 0) {
+                    System.out.println("-----page--title------- " + view.getTitle());
                 }
             }
         });
-
 
 
         noCacheHeaders = new HashMap<>(2);
@@ -123,11 +127,32 @@ public class GamePageFragment extends Fragment {
             public void onRefresh() {
                 if (url != null) {
                     webView.loadUrl(url, noCacheHeaders);
-                }else{
+                } else {
                     mSwipeRefreshLayout.setRefreshing(false);
                 }
             }
         });
+
+        if (!AppUtilities.isNetworkAvailable(mcontext)) {
+            AppUtilities.showAlertDialog(mcontext, "No internet!", "Check your internet connection and try again.");
+        }
+
+        String msidn = "";
+        UserDetailsModel userDetailsModel = AppUtilities.getUserModelData(mcontext);
+        if (userDetailsModel != null && !TextUtils.isEmpty(userDetailsModel.userMSISDN)) {
+            msidn = userDetailsModel.userMSISDN;
+        }
+        AppUtilities.sendAnalytics(mcontext,
+                "game_page_screen",
+                "screen_three",
+                "game_page_loaded", ConstantsKPI.GAME_PAGE_LOADED,
+                "",
+                "24",
+                ConstantsKPI.GAME_PAGE_LOADED,
+                msidn,
+                24,
+                TrackingConstants.eventServiceMap.get(24),
+                "", "", "", "");
 
     }
 }

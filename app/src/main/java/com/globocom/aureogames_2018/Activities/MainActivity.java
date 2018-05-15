@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -21,6 +20,9 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chartboost.sdk.Chartboost;
@@ -31,11 +33,15 @@ import com.globocom.aureogames_2018.Fragments.GamePageFragment;
 import com.globocom.aureogames_2018.Fragments.VerifyOtpFragment;
 import com.globocom.aureogames_2018.Model.UserDetailsModel;
 import com.globocom.aureogames_2018.R;
+import com.globocom.aureogames_2018.Utilities.AppConstants;
 import com.globocom.aureogames_2018.Utilities.AppSharedPrefSettings;
 import com.globocom.aureogames_2018.Utilities.AppUtilities;
+import com.globocom.aureogames_2018.Utilities.CircleTransform;
 import com.globocom.aureogames_2018.Utilities.ConstantsKPI;
 import com.globocom.aureogames_2018.Utilities.ConstantsValues;
+import com.globocom.aureogames_2018.Utilities.TrackingConstants;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 import java.util.Locale;
@@ -61,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isCountryCodeValid = false;
     private String androidId;
     private String operator = "";
+    private RelativeLayout relativeLayoutTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("-chartboost--- " + e);
         }
 
+        loadTitle(true);
         init();
         getPermissionStatusAndWifiStatus();
 
@@ -137,8 +145,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loadScreenOne() {
-        if (enterNumberFragment == null)
+        if (enterNumberFragment == null) {
             enterNumberFragment = EnterNumberFragment.newInstance(countryCode, carrierName, mobileNoFromSim);
+        }
 
         if (enterNumberFragment.isAdded()) {
             return;
@@ -157,10 +166,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void loadScreenTwo(String msisdn,String op,String url) {
+    public void loadScreenTwo(String msisdn, String op, String url) {
         if (verifyOtpFragment == null)
-            verifyOtpFragment = VerifyOtpFragment.newInstance(msisdn,op,url);
+            verifyOtpFragment = VerifyOtpFragment.newInstance(msisdn, op, url);
 
+        if (verifyOtpFragment.isAdded()) {
+            return;
+        }
 
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.setCustomAnimations(R.anim.enter_from_right, R.anim.hold);
@@ -176,6 +188,10 @@ public class MainActivity extends AppCompatActivity {
     public void loadScreenThree() {
         if (gamePageFragment == null)
             gamePageFragment = new GamePageFragment();
+
+        if (gamePageFragment.isAdded()) {
+            return;
+        }
 
         fragmentStack.clear();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -225,9 +241,7 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         countryCode = info.getCountryIso();
                     }
-                    if (info.getCountryIso().equalsIgnoreCase(Constants.COUNTRY_CODE)) {
-                        isCountryCodeValid = true;
-                    }
+
                 }
 
                 if (!TextUtils.isEmpty(info.getCarrierName())) {
@@ -246,6 +260,22 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
+        }
+        if(!TextUtils.isEmpty(countryCode)){
+            String [] splitcountry = countryCode.split(",");
+            if(splitcountry!=null && splitcountry.length>1){
+                for(int i=0;i<splitcountry.length;i++){
+                    String code = splitcountry[i].trim();
+                    if (code.equalsIgnoreCase(Constants.COUNTRY_CODE)) {
+                        countryCode=code;
+                        isCountryCodeValid = true;
+                    }
+                }
+            }
+        }
+
+        if (countryCode.equalsIgnoreCase(Constants.COUNTRY_CODE)) {
+            isCountryCodeValid = true;
         }
 
         System.out.println("-validation--countrycode--- " + countryCode);
@@ -266,8 +296,18 @@ public class MainActivity extends AppCompatActivity {
             alert.setTitle("Information");
             alert.show();
 
-            String url= ConstantsValues.OPEN_APP_KPI.replace("@msisdn", "").replace("@googleId", AppSharedPrefSettings.getANDROID_ID(mcontext)) + "&ip=" + getIPAddress(true) + "&operatorId=" + operator + "&version=" + android.os.Build.VERSION.SDK_INT;;
-            AppUtilities.sendInternalAnalytics(mcontext,url,"99");
+            String url = ConstantsValues.OPEN_APP_KPI.replace("@msisdn", "").replace("@googleId", AppSharedPrefSettings.getANDROID_ID(mcontext)) + "&ip=" + getIPAddress(true) + "&operatorId=" + operator + "&version=" + android.os.Build.VERSION.SDK_INT;
+            AppUtilities.sendAnalytics(mcontext,
+                    "enter_number_screen",
+                    "screen_one",
+                    "invalid_country", ConstantsKPI.INVALID_COUNTRY,
+                    url
+                    , "99",
+                    ConstantsKPI.INVALID_COUNTRY,
+                    "",
+                    25,
+                    TrackingConstants.eventServiceMap.get(25),
+                    "", "", "", "");
         } else {
 
             UserDetailsModel userDetailsModel = AppUtilities.getUserModelData(mcontext);
@@ -275,6 +315,18 @@ public class MainActivity extends AppCompatActivity {
                     && (ConstantsKPI.PIN_VERIFY_KPI.equalsIgnoreCase(userDetailsModel.userKPI) ||
                     ConstantsKPI.PRODUCT_PAGE_KPI.equalsIgnoreCase(userDetailsModel.userKPI))) {
                 loadPage(3);
+                String url = ConstantsValues.PRODUCT_PAGE_KPI.replace("@msisdn", userDetailsModel.userMSISDN) + "&ip=" + getIPAddress(true);
+                AppUtilities.sendAnalytics(mcontext,
+                        "enter_number_screen",
+                        "screen_one",
+                        "redirect_togame", ConstantsKPI.PRODUCT_REPEAT_KPI,
+                        url
+                        , "2",
+                        ConstantsKPI.PRODUCT_REPEAT_KPI,
+                        userDetailsModel.userMSISDN,
+                        10,
+                        TrackingConstants.eventServiceMap.get(10),
+                        "", "", "", "");
 
             } else {
                 loadPage(1);
@@ -410,6 +462,19 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }, 2000);
             }
+        }
+    }
+
+    public void loadTitle(boolean showheader){
+        relativeLayoutTitle = (RelativeLayout) findViewById(R.id.header_title_rel);
+        if(!showheader){
+            relativeLayoutTitle.setVisibility(View.GONE);
+        }else{
+            relativeLayoutTitle.setVisibility(View.VISIBLE);
+            ImageView imageView = (ImageView) findViewById(R.id.iconimagV) ;
+            TextView header = (TextView) findViewById(R.id.appnameTV) ;
+            Picasso.get().load(R.drawable.icon_image).transform(new CircleTransform()).into(imageView);
+            header.setTypeface(AppUtilities.applyTypeFace(mcontext, AppConstants.EgonSans_Bold));
         }
     }
 }

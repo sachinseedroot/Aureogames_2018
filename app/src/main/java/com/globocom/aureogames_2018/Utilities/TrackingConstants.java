@@ -17,9 +17,19 @@ public class TrackingConstants {
             4.	PIN READ KPI – level 4 score 400
             5.	PIN VERIFY KPI – level 5 score 500
             6.	PRODUCT PAGE KPI – level 6 score 600
+            17.	OTP SENT FAILED – level 17 score 1700
+            18.	OTP SENT SUCCESS – level 18 score 1800
+            19.	OTP VERIFY FAILED – level 19 score 1900
+            20.	OTP VERIFY SUCCESS – level 20 score 2000
+            21.	OTP VERIFY SUCCESS APP CLOSED – level 21 score 2100
+            22.	OTP SENDT NOT RECEIVED – level 22 score 2200
+            23.	RESEND OTP – level 23 score 2300
+            24.	RESEND OTP – level 24 score 2400
+            25.	INVALID COUNTRY – level 25 score 2500
 */
 
     public static Map<Integer, Object> eventServiceMap = new HashMap<Integer, Object>();
+
     static {
         eventServiceMap.put(1, 100);
         eventServiceMap.put(2, 100);
@@ -33,6 +43,16 @@ public class TrackingConstants {
         eventServiceMap.put(10, 100);
         eventServiceMap.put(11, 100);
         eventServiceMap.put(12, 100);
+
+        eventServiceMap.put(17, 100);
+        eventServiceMap.put(18, 100);
+        eventServiceMap.put(19, 100);
+        eventServiceMap.put(20, 100);
+        eventServiceMap.put(21, 100);
+        eventServiceMap.put(22, 100);
+        eventServiceMap.put(23, 100);
+        eventServiceMap.put(24, 100);
+        eventServiceMap.put(25, 100);
     }
 
     public static Map<Integer, String> eventValueMap = new HashMap<Integer, String>();

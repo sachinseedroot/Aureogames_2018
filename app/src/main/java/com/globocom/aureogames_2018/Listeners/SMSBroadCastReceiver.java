@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.SmsMessage;
 
+import com.globocom.aureogames_2018.Utilities.AppConstants;
+
 public class SMSBroadCastReceiver extends BroadcastReceiver
 {
 
@@ -37,19 +39,19 @@ public class SMSBroadCastReceiver extends BroadcastReceiver
                 //Toast.makeText(getApplicationContext(), "Verify PIN: ", Toast.LENGTH_LONG).show();
                 //Just to fetch otp sent from WNRCRP
                 if(Sender.startsWith("9978") ||Sender.startsWith("+91") || Sender.startsWith("MD-GLOBCM")) {
-                    Intent smsIntent = new Intent("otp");
+                    Intent smsIntent = new Intent(AppConstants.OTP_receiver);
                     smsIntent.putExtra("message", sms_str);
                     smsIntent.putExtra("source",Sender);
                     LocalBroadcastManager.getInstance(context).sendBroadcast(smsIntent);
 
                 }else  if(Sender.startsWith("1111") ||Sender.startsWith("+91") || Sender.startsWith("MD-GLOBCM")) {
-                    Intent smsIntent = new Intent("otp");
+                    Intent smsIntent = new Intent(AppConstants.OTP_receiver);
                     smsIntent.putExtra("message", sms_str);
                     smsIntent.putExtra("source",Sender);
                     LocalBroadcastManager.getInstance(context).sendBroadcast(smsIntent);
 
                 } else {
-                    Intent smsIntent = new Intent("otp");
+                    Intent smsIntent = new Intent(AppConstants.OTP_receiver);
                     smsIntent.putExtra("message", sms_str);
                     smsIntent.putExtra("source",Sender);
                     LocalBroadcastManager.getInstance(context).sendBroadcast(smsIntent);

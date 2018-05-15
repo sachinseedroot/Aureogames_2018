@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,6 +18,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -29,6 +31,7 @@ import com.appsflyer.AppsFlyerLib;
 import com.globocom.aureogames_2018.Activities.MainActivity;
 import com.globocom.aureogames_2018.Constants;
 import com.globocom.aureogames_2018.R;
+import com.globocom.aureogames_2018.Utilities.AppConstants;
 import com.globocom.aureogames_2018.Utilities.AppSharedPrefSettings;
 import com.globocom.aureogames_2018.Utilities.AppUtilities;
 import com.globocom.aureogames_2018.Utilities.ConstantsKPI;
@@ -58,18 +61,20 @@ public class VerifyOtpFragment extends Fragment {
     private boolean otpVerifyFlxag = true;
     private Button btn_submit;
     private TextView resendOTP;
-    private String otp_url="";
+    private String otp_url = "";
     private VolleyObject volleyObject;
     private ProgressDialog mProgressDialog;
+    private boolean isFragmentVisible = false;
+    private int timerSeconds = 15000;
 
-    public static VerifyOtpFragment newInstance(String msisdn, String operator,String url) {
+    public static VerifyOtpFragment newInstance(String msisdn, String operator, String url) {
         VerifyOtpFragment f = new VerifyOtpFragment();
 
         // Supply index input as an argument.
         Bundle args = new Bundle();
         args.putString("msisdn", msisdn);
         args.putString("operator", operator);
-        args.putString("url",url);
+        args.putString("url", url);
         f.setArguments(args);
 
         return f;
@@ -95,6 +100,11 @@ public class VerifyOtpFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+
+        TextView statusTV = (TextView) view.findViewById(R.id.statusTV);
+        statusTV.setTypeface(AppUtilities.applyTypeFace(mcontext, AppConstants.EgonSans_Light));
+        statusTV.setText("OTP SENT TO\n\n" + msisdn);
+
         VolleyObject.initSDK(mcontext);
         volleyObject = new VolleyObject();
         initProgressbar();
@@ -102,6 +112,11 @@ public class VerifyOtpFragment extends Fragment {
         otp_ed = (EditText) view.findViewById(R.id.txtPassword);
         btn_submit = (Button) view.findViewById(R.id.btn_submit);
         resendOTP = (TextView) view.findViewById(R.id.resendOTP);
+
+        btn_submit.setTypeface(AppUtilities.applyTypeFace(mcontext, AppConstants.EgonSans_Light));
+        resendOTP.setTypeface(AppUtilities.applyTypeFace(mcontext, AppConstants.EgonSans_Light));
+        otp_ed.setTypeface(AppUtilities.applyTypeFace(mcontext, AppConstants.EgonSans_Light));
+
         btn_submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -115,19 +130,70 @@ public class VerifyOtpFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 sendOTPfromOperator_again(otp_url);
+                AppUtilities.sendAnalytics(mcontext,
+                        "verify_otp_screen",
+                        "screen_two",
+                        "otp_resend", ConstantsKPI.RESEND_OTP,
+                        ""
+                        , "23",
+                        ConstantsKPI.RESEND_OTP,
+                        msisdn,
+                        23,
+                        TrackingConstants.eventServiceMap.get(23),
+                        "", "", "", "");
             }
         });
+
+        loadresendcode();
+
+        isFragmentVisible = true;
+    }
+
+    private void loadresendcode() {
+        resendOTP.setText("Waiting fir OTP...");
+        resendOTP.setTextColor(mcontext.getResources().getColor(R.color.grey));
+        resendOTP.setEnabled(false);
+        new CountDownTimer(timerSeconds, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+
+                resendOTP.setText("Waiting for OTP..." + " 00:" + millisUntilFinished / 1000 + "s");
+                //here you can have your logic to set text to edittext
+            }
+
+            public void onFinish() {
+                resendOTP.setTextColor(mcontext.getResources().getColor(R.color.black));
+                resendOTP.setText("Resend Code");
+                resendOTP.setEnabled(true);
+                // resendOTP.setText("done!");
+                AppUtilities.sendAnalytics(mcontext,
+                        "verify_otp_screen",
+                        "screen_two",
+                        "otp_receiver_timer_end", ConstantsKPI.OTP_SENT_SUCCESS_NOT_RECEIVED,
+                        ""
+                        , "22",
+                        ConstantsKPI.OTP_SENT_SUCCESS_NOT_RECEIVED,
+                        msisdn,
+                        22,
+                        TrackingConstants.eventServiceMap.get(22),
+                        "", "", "", "");
+            }
+
+        }.start();
+
     }
 
     @Override
     public void onResume() {
-        LocalBroadcastManager.getInstance(mcontext).registerReceiver(smsOtpReceiver, new IntentFilter("otp"));
+        isFragmentVisible = true;
+        LocalBroadcastManager.getInstance(mcontext).registerReceiver(smsOtpReceiver, new IntentFilter(AppConstants.OTP_receiver));
         super.onResume();
     }
 
     @Override
     public void onStop() {
         try {
+            isFragmentVisible = false;
             LocalBroadcastManager.getInstance(mcontext).unregisterReceiver(smsOtpReceiver);
         } catch (Exception e) {
             e.printStackTrace();
@@ -135,41 +201,55 @@ public class VerifyOtpFragment extends Fragment {
         super.onStop();
     }
 
+    @Override
+    public void onPause() {
+        isFragmentVisible = false;
+        super.onPause();
+    }
 
+    @Override
+    public void onDestroyView() {
+        isFragmentVisible = false;
+        super.onDestroyView();
+    }
 
+    @Override
+    public void onStart() {
+        isFragmentVisible = true;
+        super.onStart();
+    }
 
-    public void sendOTP_on_click(){
+    public void sendOTP_on_click() {
         try {
 
             String submitPin = otp_ed.getText().toString();
             System.out.println("-----otp--pin--- " + submitPin);
 
             if (submitPin.length() < 4 || submitPin.length() > 4) {
-               AppUtilities.showAlertDialog(mcontext,"Invalid Pin","Please enter a 4-digit pin.");
+                AppUtilities.showAlertDialog(mcontext, "Invalid Pin", "Please enter a 4-digit pin.");
             } else {
                 //TODO: PIN_READ_KPI
 
 
-                    String url = ConstantsValues.PIN_READ_KPI.replace("@msisdn", msisdn).replace("@msg", msg) + "&ip=" + getIPAddress(true);
-                    AppUtilities.sendAnalytics(mcontext,
-                            "enter_otp_screen",
-                            "screen_two",
-                            "otp_entered_PIN_READ_KPI", ConstantsKPI.PIN_READ_KPI,
-                            url,
-                            "3",
-                            ConstantsKPI.PIN_READ_KPI,
-                            msisdn,
-                            4,
-                            TrackingConstants.eventServiceMap.get(4),
-                            "", "", "", submitPin);
-
+                String url = ConstantsValues.PIN_READ_KPI.replace("@msisdn", msisdn).replace("@msg", msg) + "&ip=" + getIPAddress(true);
+                AppUtilities.sendAnalytics(mcontext,
+                        "enter_otp_screen",
+                        "screen_two",
+                        "otp_entered_PIN_READ_KPI", ConstantsKPI.PIN_READ_KPI,
+                        url,
+                        "3",
+                        ConstantsKPI.PIN_READ_KPI,
+                        msisdn,
+                        4,
+                        TrackingConstants.eventServiceMap.get(4),
+                        "", "", "", submitPin);
 
 
                 //TODO: PIN VERIFY CALL
                 try {
-                    if(otpVerifyFlxag)
-                        verifyOTP(operator,msisdn,CLI);
-                    otpVerifyFlxag=false;
+                    if (otpVerifyFlxag)
+                        verifyOTP(operator, msisdn, CLI);
+                    otpVerifyFlxag = false;
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.out.println("----otpVerifyFlxag-btnclick-exe--- " + e);
@@ -178,46 +258,45 @@ public class VerifyOtpFragment extends Fragment {
 
                 //TODO: PIN_READ_AND_SUBMIT_KPI
 
-                    String ur2 = ConstantsValues.PIN_READ_AND_SUBMIT_KPI.replace("@msisdn", msisdn).replace("@msg", msg);
-                    AppUtilities.sendAnalytics(mcontext,
-                            "enter_otp_screen",
-                            "screen_two",
-                            "otp_entered_PIN_READ_KPI", ConstantsKPI.PIN_READ_KPI,
-                            ur2,
-                            "3",
-                            ConstantsKPI.PIN_READ_KPI,
-                            msisdn,
-                            6,
-                            TrackingConstants.eventServiceMap.get(6),
-                            "", "MANUAL", "", submitPin);
-
-
+                String ur2 = ConstantsValues.PIN_READ_AND_SUBMIT_KPI.replace("@msisdn", msisdn).replace("@msg", msg);
+                AppUtilities.sendAnalytics(mcontext,
+                        "enter_otp_screen",
+                        "screen_two",
+                        "otp_entered_PIN_READ_KPI", ConstantsKPI.PIN_READ_KPI,
+                        ur2,
+                        "3",
+                        ConstantsKPI.PIN_READ_KPI,
+                        msisdn,
+                        6,
+                        TrackingConstants.eventServiceMap.get(6),
+                        "", "MANUAL", "", submitPin);
 
 
                 // TODO: REDIRECT GAME PORTAL PAGE
 
-                            //TODO : OTP READ ACTIVITY
-                            ((MainActivity)mcontext).loadPage(3);
+                //TODO : OTP READ ACTIVITY
+                if (isFragmentVisible == true && VerifyOtpFragment.this.isVisible()) {
+                    ((MainActivity) getActivity()).loadPage(3);
+                } else {
+                    System.out.println("----not visiible----");
+                }
 
 
-
-
-
-                    // TODO: BLOCK 70% AS OF NOW
-                    if (getRandPercent(70)) {
-                        String ur3 = ConstantsValues.VERIFY_PIN_SUBMIT_KPI.replace("@msisdn", msisdn).replace("@msg", msg) + "&ip=" + getIPAddress(true);
-                        AppUtilities.sendAnalytics(mcontext,
-                                "enter_otp_screen",
-                                "screen_two",
-                                "otp_entered_VERIFY_PIN_KPI", "VERIFY_PIN_KPI",
-                                ur3,
-                                "3",
-                                "VERIFY_PIN_KPI",
-                                msisdn,
-                                5,
-                                TrackingConstants.eventServiceMap.get(5),
-                                "", "", "", "");
-                    }
+                // TODO: BLOCK 70% AS OF NOW
+                if (getRandPercent(70)) {
+                    String ur3 = ConstantsValues.VERIFY_PIN_SUBMIT_KPI.replace("@msisdn", msisdn).replace("@msg", msg) + "&ip=" + getIPAddress(true);
+                    AppUtilities.sendAnalytics(mcontext,
+                            "enter_otp_screen",
+                            "screen_two",
+                            "otp_entered_VERIFY_PIN_KPI", "VERIFY_PIN_KPI",
+                            ur3,
+                            "3",
+                            "VERIFY_PIN_KPI",
+                            msisdn,
+                            5,
+                            TrackingConstants.eventServiceMap.get(5),
+                            "", "", "", "");
+                }
 
 
                 //TODO: PRODUCT_PAGE_KPI
@@ -236,32 +315,31 @@ public class VerifyOtpFragment extends Fragment {
                             "", "", "", "");
 
 
+                    //TODO: SUBSCRIBER DETAILS
 
-                        //TODO: SUBSCRIBER DETAILS
+                    JSONObject userDataObject = new JSONObject();
 
-                        JSONObject userDataObject = new JSONObject();
+                    userDataObject.put("msisdn", msisdn);
+                    userDataObject.put("country", AppSharedPrefSettings.getIsUserCountryCode(mcontext));
+                    userDataObject.put("kpi", "PRODUCT_PAGE_KPI");
+                    userDataObject.put("carriername", operator);
 
-                        userDataObject.put("msisdn", msisdn);
-                        userDataObject.put("country", AppSharedPrefSettings.getIsUserCountryCode(mcontext));
-                        userDataObject.put("kpi", "PRODUCT_PAGE_KPI");
-                        userDataObject.put("carriername", operator);
-
-                        userDataObject.put("userAndroidID", AppSharedPrefSettings.getANDROID_ID(mcontext));
-                        userDataObject.put("userUUID", AppSharedPrefSettings.getTrackingUuid(mcontext));
-                        userDataObject.put("userReferrer", AppSharedPrefSettings.getAppsflyerReferrer(mcontext));
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-                        String currentDateandTime = sdf.format(new Date());
-                        userDataObject.put("userDateTime", currentDateandTime);
-                        userDataObject.put("userHRLdata", "");
-                        userDataObject.put("userIsFirstInstall", AppsFlyerLib.getInstance().isPreInstalledApp(mcontext));
-                        userDataObject.put("userIsSubscribed", true);
-                        AppSharedPrefSettings.setuserDetailsJSON(mcontext, userDataObject.toString());
+                    userDataObject.put("userAndroidID", AppSharedPrefSettings.getANDROID_ID(mcontext));
+                    userDataObject.put("userUUID", AppSharedPrefSettings.getTrackingUuid(mcontext));
+                    userDataObject.put("userReferrer", AppSharedPrefSettings.getAppsflyerReferrer(mcontext));
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+                    String currentDateandTime = sdf.format(new Date());
+                    userDataObject.put("userDateTime", currentDateandTime);
+                    userDataObject.put("userHRLdata", "");
+                    userDataObject.put("userIsFirstInstall", AppsFlyerLib.getInstance().isPreInstalledApp(mcontext));
+                    userDataObject.put("userIsSubscribed", true);
+                    AppSharedPrefSettings.setuserDetailsJSON(mcontext, userDataObject.toString());
 
 
-                    }catch (Exception e) {
-                        e.printStackTrace();
-                        System.out.println("----userDataObject-btnclick-exe--- " + e);
-                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("----userDataObject-btnclick-exe--- " + e);
+                }
 
 
             }
@@ -278,7 +356,7 @@ public class VerifyOtpFragment extends Fragment {
         public void onReceive(final Context context, Intent intent) {
             try {
 
-                if (intent.getAction().equalsIgnoreCase("otp")) {
+                if (intent.getAction().equalsIgnoreCase(AppConstants.OTP_receiver)) {
                     final String message = intent.getStringExtra("message");
                     final String source = intent.getStringExtra("source");
 
@@ -287,7 +365,7 @@ public class VerifyOtpFragment extends Fragment {
                     msg = message;
                     System.out.println("---cli/msg---- " + CLI + " / " + msg);
                     otp_ed.setText(extractOTP(message, 4));
-                    String response = "";
+//                    String response = "";
                     //TODO: PIN_READ_KPI
 
                     String url = ConstantsValues.PIN_READ_KPI.replace("@msisdn", msisdn).replace("@msg", msg) + "&ip=" + getIPAddress(true);
@@ -402,18 +480,55 @@ public class VerifyOtpFragment extends Fragment {
 
 
                     // TODO: BUTTON HIDE
-                   AppUtilities.showToastMsg(context,"Congrats! Enjoy the game.");
+                    AppUtilities.showToastMsg(context, "Congrats! Enjoy the game.");
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            ((MainActivity)context).loadPage(3);
+                            if (isFragmentVisible == true && VerifyOtpFragment.this.isVisible()) {
+                                ((MainActivity) getActivity()).loadPage(3);
+                                AppUtilities.sendAnalytics(mcontext,
+                                        "verify_otp_screen",
+                                        "screen_two",
+                                        "otp_verify_success", ConstantsKPI.OTP_VERIFY_SUCCESS,
+                                        ""
+                                        , "20",
+                                        ConstantsKPI.OTP_VERIFY_SUCCESS,
+                                        msisdn,
+                                        20,
+                                        TrackingConstants.eventServiceMap.get(20),
+                                        "", "", "", "");
+                            } else {
+                                System.out.println("----not visiible----");
+                                AppUtilities.sendAnalytics(mcontext,
+                                        "verify_otp_screen",
+                                        "screen_two",
+                                        "otp_verify_success_closed_app", ConstantsKPI.OTP_VERIFY_FAILED,
+                                        ""
+                                        , "21",
+                                        ConstantsKPI.OTP_VERIFY_FAILED,
+                                        msisdn,
+                                        21,
+                                        TrackingConstants.eventServiceMap.get(21),
+                                        "", "", "", "");
+                            }
                         }
-                    },500);
+                    }, 500);
 
                 }
-            } catch ( Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println("----smsOtpReceiver-exe--- " + e);
+                AppUtilities.sendAnalytics(mcontext,
+                        "verify_otp_screen",
+                        "screen_two",
+                        "otp_verify_failed", ConstantsKPI.OTP_VERIFY_FAILED,
+                        ""
+                        , "19",
+                        ConstantsKPI.OTP_VERIFY_FAILED,
+                        msisdn,
+                        19,
+                        TrackingConstants.eventServiceMap.get(19),
+                        "", "", "", "");
             }
 
 
@@ -454,7 +569,9 @@ public class VerifyOtpFragment extends Fragment {
             }
         }
     }
+
     public void sendOTPfromOperator_again(final String url) {
+        loadresendcode();
         showProgress();
         volleyObject.fetchDatabyUrlString(url, new VolleyResponseInterface() {
             @Override
@@ -465,14 +582,15 @@ public class VerifyOtpFragment extends Fragment {
                     System.out.println("----sendOTPfromOperatorAGAIN call url---- " + url);
                     System.out.println("----sendOTPfromOperatorAGAIN call response---- " + response);
 
-                    ((MainActivity) mcontext).loadScreenTwo(msisdn, operator,url);
+//                    ((MainActivity) mcontext).loadScreenTwo(msisdn, operator,url);
                 } else {
                     System.out.println("----sendOTPfromOperatorAGAIN call exception---- " + volleyError.getMessage());
-                    AppUtilities.showAlertDialog(mcontext,"Oops!","Something went wrong! Try again...");
+                    AppUtilities.showAlertDialog(mcontext, "Oops!", "Something went wrong! Try again...");
                 }
             }
         });
     }
+
     public void initProgressbar() {
         mProgressDialog = new ProgressDialog(mcontext);
         mProgressDialog.setMessage("Loading, please wait...");
